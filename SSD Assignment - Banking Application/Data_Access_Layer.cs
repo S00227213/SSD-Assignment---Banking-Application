@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Diagnostics;
 using Microsoft.Data.Sqlite;
 
 namespace Banking_Application
@@ -142,6 +143,7 @@ namespace Banking_Application
                 command.ExecuteNonQuery();
             }
 
+            LogTransaction("Account Creation", ba.accountNo, ba.name, "Account successfully created.");
             return ba.accountNo;
         }
 
@@ -184,6 +186,7 @@ namespace Banking_Application
                     command.ExecuteNonQuery();
                 }
 
+                LogTransaction("Account Closure", accNo, toRemove.name, "Account successfully closed.");
                 return true;
             }
         }
@@ -214,6 +217,7 @@ namespace Banking_Application
                     command.ExecuteNonQuery();
                 }
 
+                LogTransaction("Lodgement", accNo, toLodgeTo.name, $"Amount lodged: €{amountToLodge}");
                 return true;
             }
         }
@@ -245,7 +249,31 @@ namespace Banking_Application
                     command.ExecuteNonQuery();
                 }
 
+                LogTransaction("Withdrawal", accNo, toWithdrawFrom.name, $"Amount withdrawn: €{amountToWithdraw}");
                 return true;
+            }
+        }
+
+        private void LogTransaction(string transactionType, string accountNo, string accountName, string details)
+        {
+            string logMessage = $"WHO: {Environment.UserName}, WHAT: {transactionType}, WHERE: {Environment.MachineName}, " +
+                                $"WHEN: {DateTime.Now}, Account No: {accountNo}, Name: {accountName}, DETAILS: {details}";
+            try
+            {
+                if (!EventLog.SourceExists("SSD Banking Application"))
+                {
+                    EventLog.CreateEventSource("SSD Banking Application", "Application");
+                }
+
+                using (EventLog eventLog = new EventLog("Application"))
+                {
+                    eventLog.Source = "SSD Banking Application";
+                    eventLog.WriteEntry(logMessage, EventLogEntryType.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error writing to log: {ex.Message}");
             }
         }
     }
