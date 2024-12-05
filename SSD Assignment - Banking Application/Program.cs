@@ -7,6 +7,32 @@ namespace Banking_Application
     {
         public static void Main(string[] args)
         {
+            Console.WriteLine("Enter your username:");
+            string username = Console.ReadLine();
+
+            Console.WriteLine("Enter your password:");
+            string password = Console.ReadLine();
+
+            // Authenticate the user
+            if (!AuthenticationHelper.AuthenticateUser(username, password))
+            {
+                Console.WriteLine("Authentication failed. Exiting application.");
+                LogAuthenticationAttempt(username, success: false);
+                return;
+            }
+
+            Console.WriteLine($"Welcome, {username}!");
+
+            // Check if the user is in the "Bank Teller" group
+            if (!AuthenticationHelper.IsUserInGroup(username, "Bank Teller"))
+            {
+                Console.WriteLine("You do not have permission to access this application.");
+                LogAuthenticationAttempt(username, success: false);
+                return;
+            }
+
+            LogAuthenticationAttempt(username, success: true);
+
             Data_Access_Layer dal = Data_Access_Layer.getInstance();
             dal.loadBankAccounts();
             bool running = true;
@@ -175,6 +201,13 @@ namespace Banking_Application
                         break;
 
                     case "2": // Close Bank Account
+                        // Check if the user is an administrator
+                        if (!AuthenticationHelper.IsUserInGroup(username, "Bank Teller Administrator"))
+                        {
+                            Console.WriteLine("You do not have permission to close accounts.");
+                            break;
+                        }
+
                         Console.WriteLine("Enter Account Number: ");
                         accNo = Console.ReadLine();
 
@@ -229,7 +262,7 @@ namespace Banking_Application
                         }
                         break;
 
-                    case "4": // Lodge
+                    case "4": // Make Lodgement
                         Console.WriteLine("Enter Account Number: ");
                         accNo = Console.ReadLine();
 
@@ -344,6 +377,31 @@ namespace Banking_Application
             catch (Exception ex)
             {
                 Console.WriteLine($"Error writing to log: {ex.Message}");
+            }
+        }
+
+        private static void LogAuthenticationAttempt(string username, bool success)
+        {
+            string logMessage = success
+                ? $"Successful login for user {username}."
+                : $"Failed login attempt for user {username}.";
+
+            try
+            {
+                if (!EventLog.SourceExists("SSD Banking Application"))
+                {
+                    EventLog.CreateEventSource("SSD Banking Application", "Application");
+                }
+
+                using (EventLog eventLog = new EventLog("Application"))
+                {
+                    eventLog.Source = "SSD Banking Application";
+                    eventLog.WriteEntry(logMessage, success ? EventLogEntryType.SuccessAudit : EventLogEntryType.FailureAudit);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error writing authentication log: {ex.Message}");
             }
         }
     }
