@@ -21,10 +21,11 @@ namespace Banking_Application
                 return;
             }
 
-            Console.WriteLine($"Welcome, {username}!");
+            // Check if the user is in either the "Bank Teller" or "Bank Teller Administrator" group
+            bool isTeller = AuthenticationHelper.IsUserInGroup(username, "Bank Teller");
+            bool isAdmin = AuthenticationHelper.IsUserInGroup(username, "Bank Teller Administrator");
 
-            // Check if the user is in the "Bank Teller" group
-            if (!AuthenticationHelper.IsUserInGroup(username, "Bank Teller"))
+            if (!isTeller && !isAdmin)
             {
                 Console.WriteLine("You do not have permission to access this application.");
                 LogAuthenticationAttempt(username, success: false);
@@ -32,6 +33,16 @@ namespace Banking_Application
             }
 
             LogAuthenticationAttempt(username, success: true);
+
+            // Log the user's access level
+            if (isAdmin)
+            {
+                Console.WriteLine($"Welcome, {username}! You are logged in as an Administrator.");
+            }
+            else
+            {
+                Console.WriteLine($"Welcome, {username}! You are logged in as a Teller.");
+            }
 
             Data_Access_Layer dal = Data_Access_Layer.getInstance();
             dal.loadBankAccounts();
@@ -202,7 +213,7 @@ namespace Banking_Application
 
                     case "2": // Close Bank Account
                         // Check if the user is an administrator
-                        if (!AuthenticationHelper.IsUserInGroup(username, "Bank Teller Administrator"))
+                        if (!isAdmin)
                         {
                             Console.WriteLine("You do not have permission to close accounts.");
                             break;
