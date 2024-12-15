@@ -7,9 +7,8 @@ namespace Banking_Application
 {
     public static class EncryptionHelper
     {
-        // AES encryption key and IV 
-        private static readonly string Key = "YourStrongKey123"; // Use a strong 16/24/32 character key.
-        private static readonly string IV = "YourIV1234567890";   // Use a 16-character initialization vector.
+        private static readonly string Key = Environment.GetEnvironmentVariable("ENCRYPTION_KEY") ?? "DefaultKey123456"; // Fallback for dev
+        private static readonly string IV = Environment.GetEnvironmentVariable("ENCRYPTION_IV") ?? "DefaultIV123456";   // Fallback for dev
 
         /// <summary>
         /// Encrypts plaintext using AES encryption.

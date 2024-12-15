@@ -5,11 +5,22 @@ namespace Banking_Application
 {
     public static class AuthenticationHelper
     {
+        private static int failedLoginAttempts = 0;
+        private const int MaxFailedAttempts = 5;
+        private static DateTime? lockoutUntil = null;
+
         /// <summary>
         /// Authenticates a user against Active Directory.
+        /// Implements rate limiting to prevent brute-force attacks.
         /// </summary>
         public static bool AuthenticateUser(string username, string password)
         {
+            if (lockoutUntil.HasValue && DateTime.Now < lockoutUntil)
+            {
+                Console.WriteLine($"Account is locked. Try again after {lockoutUntil.Value}.");
+                return false;
+            }
+
             try
             {
                 using (var context = new PrincipalContext(ContextType.Domain, "ITSLIGO.LAN"))
@@ -18,8 +29,18 @@ namespace Banking_Application
                     if (!isValid)
                     {
                         Console.WriteLine("Invalid credentials.");
+                        failedLoginAttempts++;
+                        if (failedLoginAttempts >= MaxFailedAttempts)
+                        {
+                            lockoutUntil = DateTime.Now.AddMinutes(5); // Lock for 5 minutes
+                            Console.WriteLine("Too many failed attempts. Account locked for 5 minutes.");
+                        }
+                        return false;
                     }
-                    return isValid;
+
+                    // Reset failed attempts on successful login
+                    failedLoginAttempts = 0;
+                    return true;
                 }
             }
             catch (Exception ex)

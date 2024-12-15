@@ -13,7 +13,6 @@ namespace Banking_Application
         public static String databaseName = "Banking Database.db";
         private static Data_Access_Layer instance = new Data_Access_Layer();
 
-        // Singleton Design Pattern (For Concurrency Control) - Use getInstance() Method Instead.
         private Data_Access_Layer()
         {
             accounts = new List<Bank_Account>();
@@ -119,26 +118,24 @@ namespace Banking_Application
                 var command = connection.CreateCommand();
                 command.CommandText =
                 @"
-                    INSERT INTO Bank_Accounts VALUES(" +
-                    "'" + ba.accountNo + "', " +
-                    "'" + EncryptionHelper.Encrypt(ba.name) + "', " + // Encrypt PII
-                    "'" + EncryptionHelper.Encrypt(ba.address_line_1) + "', " +
-                    "'" + EncryptionHelper.Encrypt(ba.address_line_2) + "', " +
-                    "'" + EncryptionHelper.Encrypt(ba.address_line_3) + "', " +
-                    "'" + EncryptionHelper.Encrypt(ba.town) + "', " +
-                    ba.balance + ", " +
-                    (ba.GetType() == typeof(Current_Account) ? 1 : 2) + ", ";
+                    INSERT INTO Bank_Accounts (
+                        accountNo, name, address_line_1, address_line_2, 
+                        address_line_3, town, balance, accountType, overdraftAmount, interestRate
+                    ) VALUES (
+                        @accountNo, @name, @addressLine1, @addressLine2, 
+                        @addressLine3, @town, @balance, @accountType, @overdraftAmount, @interestRate
+                    )";
 
-                if (ba.GetType() == typeof(Current_Account))
-                {
-                    Current_Account ca = (Current_Account)ba;
-                    command.CommandText += ca.overdraftAmount + ", NULL)";
-                }
-                else
-                {
-                    Savings_Account sa = (Savings_Account)ba;
-                    command.CommandText += "NULL," + sa.interestRate + ")";
-                }
+                command.Parameters.AddWithValue("@accountNo", ba.accountNo);
+                command.Parameters.AddWithValue("@name", EncryptionHelper.Encrypt(ba.name));
+                command.Parameters.AddWithValue("@addressLine1", EncryptionHelper.Encrypt(ba.address_line_1));
+                command.Parameters.AddWithValue("@addressLine2", EncryptionHelper.Encrypt(ba.address_line_2));
+                command.Parameters.AddWithValue("@addressLine3", EncryptionHelper.Encrypt(ba.address_line_3));
+                command.Parameters.AddWithValue("@town", EncryptionHelper.Encrypt(ba.town));
+                command.Parameters.AddWithValue("@balance", ba.balance);
+                command.Parameters.AddWithValue("@accountType", ba.GetType() == typeof(Current_Account) ? 1 : 2);
+                command.Parameters.AddWithValue("@overdraftAmount", ba is Current_Account ? ((Current_Account)ba).overdraftAmount : (object)DBNull.Value);
+                command.Parameters.AddWithValue("@interestRate", ba is Savings_Account ? ((Savings_Account)ba).interestRate : (object)DBNull.Value);
 
                 command.ExecuteNonQuery();
             }
@@ -182,7 +179,8 @@ namespace Banking_Application
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "DELETE FROM Bank_Accounts WHERE accountNo = '" + toRemove.accountNo + "'";
+                    command.CommandText = "DELETE FROM Bank_Accounts WHERE accountNo = @accountNo";
+                    command.Parameters.AddWithValue("@accountNo", toRemove.accountNo);
                     command.ExecuteNonQuery();
                 }
 
@@ -213,7 +211,9 @@ namespace Banking_Application
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toLodgeTo.balance + " WHERE accountNo = '" + toLodgeTo.accountNo + "'";
+                    command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
+                    command.Parameters.AddWithValue("@balance", toLodgeTo.balance);
+                    command.Parameters.AddWithValue("@accountNo", toLodgeTo.accountNo);
                     command.ExecuteNonQuery();
                 }
 
@@ -245,7 +245,9 @@ namespace Banking_Application
                 {
                     connection.Open();
                     var command = connection.CreateCommand();
-                    command.CommandText = "UPDATE Bank_Accounts SET balance = " + toWithdrawFrom.balance + " WHERE accountNo = '" + toWithdrawFrom.accountNo + "'";
+                    command.CommandText = "UPDATE Bank_Accounts SET balance = @balance WHERE accountNo = @accountNo";
+                    command.Parameters.AddWithValue("@balance", toWithdrawFrom.balance);
+                    command.Parameters.AddWithValue("@accountNo", toWithdrawFrom.accountNo);
                     command.ExecuteNonQuery();
                 }
 

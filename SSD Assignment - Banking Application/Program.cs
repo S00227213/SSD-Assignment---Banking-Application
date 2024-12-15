@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SSD_Assignment___Banking_Application;
+using System;
 using System.Diagnostics;
 
 namespace Banking_Application
@@ -87,28 +88,37 @@ namespace Banking_Application
 
                         do
                         {
-                            if (loopCount > 0)
-                                Console.WriteLine("INVALID NAME ENTERED - PLEASE TRY AGAIN");
-
                             Console.WriteLine("Enter Name: ");
                             name = Console.ReadLine();
 
-                            loopCount++;
-                        } while (name.Equals(""));
+                            // Validate name input
+                            if (!InputValidator.ValidateString(name) || !InputValidator.ValidateName(name))
+                            {
+                                Console.WriteLine("INVALID NAME ENTERED - PLEASE TRY AGAIN");
+                                loopCount++;
+                                continue;
+                            }
+
+                            break; // Exit loop if valid
+                        } while (true);
 
                         String addressLine1 = "";
                         loopCount = 0;
 
                         do
                         {
-                            if (loopCount > 0)
-                                Console.WriteLine("INVALID ADDRESS LINE 1 ENTERED - PLEASE TRY AGAIN");
-
                             Console.WriteLine("Enter Address Line 1: ");
                             addressLine1 = Console.ReadLine();
 
-                            loopCount++;
-                        } while (addressLine1.Equals(""));
+                            if (!InputValidator.ValidateString(addressLine1) || !InputValidator.ValidateAddress(addressLine1))
+                            {
+                                Console.WriteLine("INVALID ADDRESS ENTERED - PLEASE TRY AGAIN");
+                                loopCount++;
+                                continue;
+                            }
+
+                            break; // Exit loop if valid
+                        } while (true);
 
                         Console.WriteLine("Enter Address Line 2: ");
                         String addressLine2 = Console.ReadLine();
@@ -121,35 +131,44 @@ namespace Banking_Application
 
                         do
                         {
-                            if (loopCount > 0)
-                                Console.WriteLine("INVALID TOWN ENTERED - PLEASE TRY AGAIN");
-
                             Console.WriteLine("Enter Town: ");
                             town = Console.ReadLine();
 
-                            loopCount++;
-                        } while (town.Equals(""));
+                            if (!InputValidator.ValidateString(town) || !InputValidator.ValidateName(town))
+                            {
+                                Console.WriteLine("INVALID TOWN ENTERED - PLEASE TRY AGAIN");
+                                loopCount++;
+                                continue;
+                            }
+
+                            break; // Exit loop if valid
+                        } while (true);
 
                         double balance = -1;
                         loopCount = 0;
 
                         do
                         {
-                            if (loopCount > 0)
-                                Console.WriteLine("INVALID OPENING BALANCE ENTERED - PLEASE TRY AGAIN");
-
                             Console.WriteLine("Enter Opening Balance: ");
                             String balanceString = Console.ReadLine();
 
                             try
                             {
                                 balance = Convert.ToDouble(balanceString);
+                                if (!InputValidator.ValidatePositiveNumber(balance))
+                                {
+                                    Console.WriteLine("Balance must be a positive number.");
+                                    continue;
+                                }
                             }
                             catch
                             {
-                                loopCount++;
+                                Console.WriteLine("INVALID OPENING BALANCE ENTERED - PLEASE TRY AGAIN");
+                                continue;
                             }
-                        } while (balance < 0);
+
+                            break; // Exit loop if valid
+                        } while (true);
 
                         Bank_Account ba;
 
@@ -160,21 +179,26 @@ namespace Banking_Application
 
                             do
                             {
-                                if (loopCount > 0)
-                                    Console.WriteLine("INVALID OVERDRAFT AMOUNT ENTERED - PLEASE TRY AGAIN");
-
                                 Console.WriteLine("Enter Overdraft Amount: ");
                                 String overdraftAmountString = Console.ReadLine();
 
                                 try
                                 {
                                     overdraftAmount = Convert.ToDouble(overdraftAmountString);
+                                    if (!InputValidator.ValidatePositiveNumber(overdraftAmount))
+                                    {
+                                        Console.WriteLine("Overdraft must be a positive number.");
+                                        continue;
+                                    }
                                 }
                                 catch
                                 {
-                                    loopCount++;
+                                    Console.WriteLine("INVALID OVERDRAFT AMOUNT ENTERED - PLEASE TRY AGAIN");
+                                    continue;
                                 }
-                            } while (overdraftAmount < 0);
+
+                                break; // Exit loop if valid
+                            } while (true);
 
                             ba = new Current_Account(name, addressLine1, addressLine2, addressLine3, town, balance, overdraftAmount);
                         }
@@ -185,21 +209,26 @@ namespace Banking_Application
 
                             do
                             {
-                                if (loopCount > 0)
-                                    Console.WriteLine("INVALID INTEREST RATE ENTERED - PLEASE TRY AGAIN");
-
                                 Console.WriteLine("Enter Interest Rate: ");
                                 String interestRateString = Console.ReadLine();
 
                                 try
                                 {
                                     interestRate = Convert.ToDouble(interestRateString);
+                                    if (!InputValidator.ValidatePositiveNumber(interestRate))
+                                    {
+                                        Console.WriteLine("Interest rate must be a positive number.");
+                                        continue;
+                                    }
                                 }
                                 catch
                                 {
-                                    loopCount++;
+                                    Console.WriteLine("INVALID INTEREST RATE ENTERED - PLEASE TRY AGAIN");
+                                    continue;
                                 }
-                            } while (interestRate < 0);
+
+                                break; // Exit loop if valid
+                            } while (true);
 
                             ba = new Savings_Account(name, addressLine1, addressLine2, addressLine3, town, balance, interestRate);
                         }
@@ -290,21 +319,26 @@ namespace Banking_Application
 
                             do
                             {
-                                if (loopCount > 0)
-                                    Console.WriteLine("INVALID AMOUNT ENTERED - PLEASE TRY AGAIN");
-
                                 Console.WriteLine("Enter Amount To Lodge: ");
                                 String amountToLodgeString = Console.ReadLine();
 
                                 try
                                 {
                                     amountToLodge = Convert.ToDouble(amountToLodgeString);
+                                    if (!InputValidator.ValidatePositiveNumber(amountToLodge))
+                                    {
+                                        Console.WriteLine("Amount to lodge must be positive.");
+                                        continue;
+                                    }
                                 }
                                 catch
                                 {
-                                    loopCount++;
+                                    Console.WriteLine("INVALID AMOUNT ENTERED - PLEASE TRY AGAIN");
+                                    continue;
                                 }
-                            } while (amountToLodge < 0);
+
+                                break; // Exit loop if valid
+                            } while (true);
 
                             dal.lodge(accNo, amountToLodge);
                             LogTransaction("Lodgement", accNo, ba.name, $"Amount lodged: €{amountToLodge}");
@@ -328,21 +362,26 @@ namespace Banking_Application
 
                             do
                             {
-                                if (loopCount > 0)
-                                    Console.WriteLine("INVALID AMOUNT ENTERED - PLEASE TRY AGAIN");
-
                                 Console.WriteLine("Enter Amount To Withdraw (€" + ba.getAvailableFunds() + " Available): ");
                                 String amountToWithdrawString = Console.ReadLine();
 
                                 try
                                 {
                                     amountToWithdraw = Convert.ToDouble(amountToWithdrawString);
+                                    if (!InputValidator.ValidatePositiveNumber(amountToWithdraw))
+                                    {
+                                        Console.WriteLine("Amount to withdraw must be positive.");
+                                        continue;
+                                    }
                                 }
                                 catch
                                 {
-                                    loopCount++;
+                                    Console.WriteLine("INVALID AMOUNT ENTERED - PLEASE TRY AGAIN");
+                                    continue;
                                 }
-                            } while (amountToWithdraw < 0);
+
+                                break; // Exit loop if valid
+                            } while (true);
 
                             bool withdrawalOK = dal.withdraw(accNo, amountToWithdraw);
 
